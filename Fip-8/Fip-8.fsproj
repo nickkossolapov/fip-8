@@ -8,8 +8,9 @@
 
     <ItemGroup>
         <Compile Include="Chip8.fs" />
-        <Compile Include="Instructions.fs" />
         <Compile Include="Display.fs" />
+        <Compile Include="Instructions.fs" />
+        <Compile Include="Cpu.fs" />
         <Compile Include="Program.fs" />
         <Content Include="..\README.md">
           <Link>README.md</Link>
