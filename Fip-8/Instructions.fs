@@ -25,8 +25,8 @@ type Instruction =
     | SetVX of Register * Byte // 0x6
     | AddToVx of Register * Byte // 0x7
     | SetI of Address // 0xA
-    | Draw of Register * Register * Nibble // 0xD
-    | Unknown
+    | Display of Register * Register * Nibble // 0xD
+    | Unknown of uint16
 
 let private readRom path =
     File.ReadAllBytes path
@@ -35,31 +35,31 @@ let private readRom path =
         | [| left; right |] -> (uint16 left <<< 8) ||| uint16 right
         | _ -> failwith "Invalid ROM file") // TODO handle odd sized files more elegantly
 
-let private decode (instruction: uint16) =
-    let opcode = (instruction &&& 0xF000us) >>> 12
+let private decode (instr: uint16) =
+    let opcode = (instr &&& 0xF000us) >>> 12
 
     match opcode with
-    | 0x0us when instruction = 0x00E0us -> ClearScreen
+    | 0x0us when instr = 0x00E0us -> ClearScreen
     | 0x1us ->
-        let nnn = getAddress instruction
+        let nnn = getAddress instr
         Jump nnn
     | 0x6us ->
-        let vx = getVx instruction
-        let nn = getByte instruction
+        let vx = getVx instr
+        let nn = getByte instr
         SetVX (vx, nn)
     | 0x7us ->
-        let vx = getVx instruction
-        let nn = getByte instruction
+        let vx = getVx instr
+        let nn = getByte instr
         AddToVx (vx, nn)
     | 0xAus ->
-        let nnn = getAddress instruction
+        let nnn = getAddress instr
         SetI nnn
     | 0xDus ->
-        let vx = getVx instruction
-        let vy = getVy instruction
-        let n = getNibble instruction
-        Draw (vx, vy, n)
-    | _ -> Unknown
+        let vx = getVx instr
+        let vy = getVy instr
+        let n = getNibble instr
+        Display (vx, vy, n)
+    | _ -> Unknown instr
 
 let getDecodedInstructions path =
     readRom path
