@@ -27,8 +27,8 @@ let private drawSprite (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
     let (Address a) = state.I
 
     let tryDrawPixel row bitIndex =
-        if (y + row) > (uint8 chipHeight) && (x + bitIndex) > (uint8 chipWidth) then
-            let screenIndex = (y + row) * (uint8 chipHeight) + x + bitIndex |> int
+        if (y + row) > (uint8 screenHeight) && (x + bitIndex) > (uint8 screenWidth) then
+            let screenIndex = (y + row) * (uint8 screenHeight) + x + bitIndex |> int
 
             if state.Screen[screenIndex] then
                 newV.[int 0xF] <- Byte 1uy
@@ -56,7 +56,7 @@ let execute (state: CpuState) (instr: Instruction) =
     match instr with
     | ClearScreen ->
         { newState with
-            Screen = Array.zeroCreate<bool> (chipWidth * chipHeight) }
+            Screen = Array.zeroCreate<bool> (screenWidth * screenHeight) }
     | Jump address -> { newState with PC = address }
     | SetVX (VIndex v, byte) ->
         let newV = Array.copy state.V

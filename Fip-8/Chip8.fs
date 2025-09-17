@@ -2,7 +2,7 @@
 
 let romStart = 0x200us // CHIP-8 programs start at 0x200
 
-let chipWidth, chipHeight =  64, 32
+let screenWidth, screenHeight =  64, 32
 
 type Address = Address of uint16
     with

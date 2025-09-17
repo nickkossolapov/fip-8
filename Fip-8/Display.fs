@@ -5,16 +5,16 @@ open Raylib_cs
 
 module private State =
     let scale = 20
-    let width, height = chipWidth * scale, chipHeight * scale
+    let width, height = screenWidth * scale, screenHeight * scale
     let mutable texture = Unchecked.defaultof<Texture2D>
     let texColorBuffer = Array.zeroCreate<Color> (width * height)
 
 open State
 
 let private upscaleScreen (screen: bool array) =
-    for y in 0 .. chipHeight - 1 do
-        for x in 0 .. chipWidth - 1 do
-            let pixel = screen.[y * chipWidth + x]
+    for y in 0 .. screenHeight - 1 do
+        for x in 0 .. screenWidth - 1 do
+            let pixel = screen.[y * screenWidth + x]
             let color = if pixel  then Color.White else Color.Black
 
             // Add 2 pixel padding between CHIP-8 pixels for a more CRT feel 
