@@ -15,7 +15,7 @@ type CpuState =
       Screen: bool array
       Memory: uint8 array }
 
-let private drawSprite (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
+let private updateScreen (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
     let newScreen = Array.copy state.Screen
     let newV = Array.copy state.V
 
@@ -67,7 +67,7 @@ let execute (state: CpuState) (instr: Instruction) =
         newV.[v] <- state.V.[v] + byte
         { newState with V = newV }
     | SetI address -> { newState with I = address }
-    | Display (vx, vy, n) -> drawSprite state vx vy n
+    | Display (vx, vy, n) -> updateScreen state vx vy n
     | Unknown rawInstr ->
         printfn $"Unknown instruction: 0x%04X{rawInstr}"
         state
