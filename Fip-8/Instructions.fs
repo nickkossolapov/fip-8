@@ -64,6 +64,6 @@ let getDecodedInstructions (rom: uint8 array) =
         address, decode instr)
 
 let getInstruction (instructions: (Address * Instruction) array) pc =
-    let (addr, instr) = instructions.[(pc - int 0x200us) / 2]
+    let (addr, instr) = instructions[(pc - int 0x200us) / 2]
 
     instr
