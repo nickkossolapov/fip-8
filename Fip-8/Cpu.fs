@@ -15,36 +15,48 @@ type CpuState =
       Screen: bool array
       Memory: uint8 array }
 
+let createState (rom: uint8 array) =
+    let memory = Array.zeroCreate 4096
+    Array.blit rom 0 memory (int romStart) rom.Length
+
+    { V = Array.create 16 (Byte 0uy)
+      I = Address 0x0us
+      Stack = [||]
+      SP = 0uy
+      PC = Address romStart
+      Screen = Array.zeroCreate (screenWidth * screenHeight)
+      Memory = memory }
+
 let private updateScreen (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
     let newScreen = Array.copy state.Screen
     let newV = Array.copy state.V
 
-    newV.[int 0xF] <- Byte 0uy
+    newV[int 0xF] <- Byte 0uy
 
-    let Byte xRaw, Byte yRaw = state.V.[vx], state.V.[vy]
-    let x, y = xRaw % 64uy, yRaw % 32uy
+    let Byte xRaw, Byte yRaw = state.V[vx], state.V[vy]
+    let x, y = int (xRaw % (uint8 screenWidth)), int (yRaw % (uint8 screenHeight))
 
     let (Address a) = state.I
 
     let tryDrawPixel row bitIndex =
-        if (y + row) > (uint8 screenHeight) && (x + bitIndex) > (uint8 screenWidth) then
-            let screenIndex = (y + row) * (uint8 screenHeight) + x + bitIndex |> int
+        if (x + bitIndex) < screenWidth && (y + row) < screenHeight then
+            let screenIndex = (y + row) * screenWidth + x + bitIndex
 
             if state.Screen[screenIndex] then
-                newV.[int 0xF] <- Byte 1uy
-                state.Screen.[screenIndex] <- false
+                newV[int 0xF] <- Byte 1uy
+                newScreen[screenIndex] <- false
             else
-                state.Screen.[screenIndex] <- true
+                newScreen[screenIndex] <- true
 
-    for row in 0 .. (int n) do
-        let spriteData = state.Memory.[(int a) + row]
+    for row in 0 .. (int n) - 1 do
+        let spriteData = state.Memory[(int a) + row]
 
         for bitIndex = 0 to 7 do
             let mask = 128uy >>> bitIndex
             let pixelOn = (spriteData &&& mask) <> 0uy
 
             if pixelOn then
-                tryDrawPixel (uint8 row) (uint8 bitIndex)
+                tryDrawPixel row bitIndex
 
     { state with
         Screen = newScreen
@@ -60,14 +72,14 @@ let execute (state: CpuState) (instr: Instruction) =
     | Jump address -> { newState with PC = address }
     | SetVX (VIndex v, byte) ->
         let newV = Array.copy state.V
-        newV.[v] <- byte
+        newV[v] <- byte
         { newState with V = newV }
     | AddToVx (VIndex v, byte) ->
         let newV = Array.copy state.V
-        newV.[v] <- state.V.[v] + byte
+        newV[v] <- state.V[v] + byte
         { newState with V = newV }
     | SetI address -> { newState with I = address }
-    | Display (vx, vy, n) -> updateScreen state vx vy n
+    | Display (vx, vy, n) -> updateScreen newState vx vy n
     | Unknown rawInstr ->
         printfn $"Unknown instruction: 0x%04X{rawInstr}"
         state
