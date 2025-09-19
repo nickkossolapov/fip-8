@@ -8,17 +8,19 @@
 
     <ItemGroup>
         <Compile Include="Chip8.fs" />
+        <Compile Include="Debug.fs" />
         <Compile Include="Display.fs" />
         <Compile Include="Instructions.fs" />
+        <Compile Include="Timing.fs" />
         <Compile Include="Cpu.fs" />
         <Compile Include="Program.fs" />
         <Content Include="..\README.md">
-          <Link>README.md</Link>
+            <Link>README.md</Link>
         </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="Raylib-cs" Version="7.0.1" />
+        <PackageReference Include="Raylib-cs" Version="7.0.1" />
     </ItemGroup>
 
 </Project>

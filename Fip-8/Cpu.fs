@@ -15,7 +15,7 @@ type CpuState =
       Screen: bool array
       Memory: uint8 array }
 
-let createState (rom: uint8 array) =
+let createCpuState (rom: uint8 array) =
     let memory = Array.zeroCreate 4096
     Array.blit rom 0 memory (int romStart) rom.Length
 

@@ -26,8 +26,9 @@ let private upscaleScreen (screen: bool array) =
 
 let init () =
     Raylib.InitWindow (width, height, "FIP-8")
+    Raylib.SetTargetFPS 60
     let image = Raylib.GenImageColor (width, height, Color.Black)
-    texture <- Raylib.LoadTextureFromImage (image)
+    texture <- Raylib.LoadTextureFromImage image
 
 let draw screen =
     Raylib.BeginDrawing ()
