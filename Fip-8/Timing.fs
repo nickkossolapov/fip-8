@@ -4,31 +4,44 @@ open System.Diagnostics
 
 let targetInstrPerSecond = 700.0
 let msPerInstruction = 1000.0 / targetInstrPerSecond
+let msPerTimerTick = 1000.0 / 60.0 // CHIP-8 decrements at 60Hz
 
 type TimingState =
     { Stopwatch: Stopwatch
       LastTime: float
-      Accumulator: float
-      InstructionsForTick: int }
+      InstructionAccumulator: float
+      TimerAccumulator: float
+      InstructionsForTick: int
+      TimerTicks: int }
 
 let createTimingState () =
     { Stopwatch = Stopwatch ()
       LastTime = 0.0
-      Accumulator = 0.0
-      InstructionsForTick = 0 }
+      InstructionAccumulator = 0.0
+      TimerAccumulator = 0.0
+      InstructionsForTick = 0
+      TimerTicks = 0 }
 
 let getNextTimingState (state: TimingState) =
     if not state.Stopwatch.IsRunning then
         state.Stopwatch.Start ()
 
-    let currentTime = float state.Stopwatch.ElapsedMilliseconds
-    let dt = currentTime - state.LastTime
+    let now = float state.Stopwatch.ElapsedMilliseconds
+    let dt = now - state.LastTime
 
-    let accumulator = state.Accumulator + dt
-    let numInstr = int (accumulator / msPerInstruction)
-    let newAccumulator = accumulator - float numInstr * msPerInstruction
+    // Instruction scheduling
+    let accInstr = state.InstructionAccumulator + dt
+    let numInstr = int (accInstr / msPerInstruction)
+    let accInstr' = accInstr - float numInstr * msPerInstruction
+
+    // 60 Hz timer scheduling
+    let accTimer = state.TimerAccumulator + dt
+    let numTimerTicks = int (accTimer / msPerTimerTick)
+    let accTimer' = accTimer - float numTimerTicks * msPerTimerTick
 
     { state with
-        LastTime = currentTime
-        Accumulator = newAccumulator
-        InstructionsForTick = numInstr }
+        LastTime = now
+        InstructionAccumulator = accInstr'
+        TimerAccumulator = accTimer'
+        InstructionsForTick = numInstr
+        TimerTicks = numTimerTicks }

@@ -12,18 +12,14 @@ Display.init ()
 let rom = readRom "D:/test-files/IBM Logo.ch8"
 let instructions = getDecodedInstructions rom
 let fetch (Address pc) = getInstruction instructions (int pc)
-let mutable cpuState = createCpuState rom
-let mutable timingState = createTimingState ()
+let mutable state = createCpuState rom, createTimingState ()
 
 let runProgramLoop () : bool =
     not (CBool.op_Implicit (Raylib.WindowShouldClose ()))
 
 while runProgramLoop () do
-    timingState <- getNextTimingState timingState
+    state <- stepEmulation fetch state
 
-    for _ in 0 .. timingState.InstructionsForTick do
-        cpuState <- fetch cpuState.PC |> execute cpuState
-
-    Display.draw cpuState.Screen
+    Display.draw (fst state).Screen
 
 Raylib.CloseWindow ()

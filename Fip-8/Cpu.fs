@@ -2,6 +2,7 @@
 
 open Fip8.Chip8
 open Fip8.Instructions
+open Fip8.Timing
 
 type VRegister = Byte
 type IRegister = Address
@@ -13,7 +14,8 @@ type CpuState =
       SP: uint8
       PC: Address
       Screen: bool array
-      Memory: uint8 array }
+      Memory: uint8 array
+      Delay: uint8 }
 
 let createCpuState (rom: uint8 array) =
     let memory = Array.zeroCreate 4096
@@ -25,7 +27,8 @@ let createCpuState (rom: uint8 array) =
       SP = 0uy
       PC = Address romStart
       Screen = Array.zeroCreate (screenWidth * screenHeight)
-      Memory = memory }
+      Memory = memory
+      Delay = 255uy }
 
 let private updateScreen (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
     let newScreen = Array.copy state.Screen
@@ -62,7 +65,16 @@ let private updateScreen (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
         Screen = newScreen
         V = newV }
 
-let execute (state: CpuState) (instr: Instruction) =
+let private applyDelayTicks (cpu: CpuState) (ticks: int) =
+    if ticks <= 0 || cpu.Delay = 0uy then
+        cpu
+    else
+        let remaining = int cpu.Delay - ticks
+
+        { cpu with
+            Delay = if remaining <= 0 then 0uy else uint8 remaining }
+
+let private execute (state: CpuState) (instr: Instruction) =
     let newState = { state with PC = state.PC + 2us }
 
     match instr with
@@ -83,3 +95,13 @@ let execute (state: CpuState) (instr: Instruction) =
     | Unknown rawInstr ->
         printfn $"Unknown instruction: 0x%04X{rawInstr}"
         state
+
+let stepEmulation fetch (cpuState, timingState) =
+    let timingState' = getNextTimingState timingState
+    let cpuState' = applyDelayTicks cpuState timingState.TimerTicks
+
+    let cpuState'' =
+        Seq.init timingState'.InstructionsForTick id
+        |> Seq.fold (fun s _ -> fetch s.PC |> execute s) cpuState'
+
+    cpuState'', timingState'
