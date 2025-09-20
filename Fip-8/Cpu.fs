@@ -82,19 +82,20 @@ let private execute (state: CpuState) (instr: Instruction) =
         { newState with
             Screen = Array.zeroCreate<bool> (screenWidth * screenHeight) }
     | Jump address -> { newState with PC = address }
-    | SetVX (VIndex v, byte) ->
+    | LoadVx (VIndex v, byte) ->
         let newV = Array.copy state.V
         newV[v] <- byte
         { newState with V = newV }
-    | AddToVx (VIndex v, byte) ->
+    | AddVx (VIndex v, byte) ->
         let newV = Array.copy state.V
         newV[v] <- state.V[v] + byte
         { newState with V = newV }
-    | SetI address -> { newState with I = address }
-    | Display (vx, vy, n) -> updateScreen newState vx vy n
+    | LoadI address -> { newState with I = address }
+    | Draw (vx, vy, n) -> updateScreen newState vx vy n
+    | Ignored -> newState
     | Unknown rawInstr ->
-        printfn $"Unknown instruction: 0x%04X{rawInstr}"
-        state
+        printfn $"WARN: Unknown instruction: 0x%04X{rawInstr}"
+        newState
 
 let stepEmulation fetch (cpuState, timingState) =
     let timingState' = getNextTimingState timingState
