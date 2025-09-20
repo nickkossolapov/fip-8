@@ -12,6 +12,7 @@
         <Compile Include="Display.fs" />
         <Compile Include="Instructions.fs" />
         <Compile Include="Timing.fs" />
+        <Compile Include="Keypad.fs" />
         <Compile Include="Cpu.fs" />
         <Compile Include="Program.fs" />
         <Content Include="..\README.md">
