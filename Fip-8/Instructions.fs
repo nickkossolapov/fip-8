@@ -54,7 +54,14 @@ type Instruction =
     | Ignored // Includes: Sys 0x0nnn
     | Unknown of uint16
 
-let private decode (instr: uint16) =
+let readRom path = File.ReadAllBytes path
+
+let fetch (memory: uint8 array) (Address pc) =
+    let left, right = memory[int pc], memory[int pc + 1]
+
+    (uint16 left <<< 8) ||| uint16 right
+
+let decode (instr: uint16) =
     let opcode = int ((instr &&& 0xF000us) >>> 12)
 
     match opcode with
@@ -103,15 +110,3 @@ let private decode (instr: uint16) =
         | 0x65 -> LoadVxFromMemory (getVx instr)
         | _ -> Unknown instr
     | _ -> Unknown instr
-
-let readRom path = File.ReadAllBytes path
-
-let getDecodedInstructions (rom: uint8 array) =
-    rom
-    |> Array.chunkBySize 2
-    |> Array.map (function
-        | [| left; right |] -> (uint16 left <<< 8) ||| uint16 right
-        | _ -> failwith "Invalid ROM file") // TODO handle odd sized files more elegantly
-    |> Array.map decode
-
-let getInstruction (instructions: Instruction array) pc = instructions[(pc - int 0x200us) / 2]

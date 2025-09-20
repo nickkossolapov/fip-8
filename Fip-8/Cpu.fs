@@ -28,7 +28,7 @@ let createCpuState (rom: uint8 array) =
       PC = Address romStart
       Screen = Array.zeroCreate (screenWidth * screenHeight)
       Memory = memory
-      Delay = 255uy }
+      Delay = 0uy }
 
 module private InstructionImplementations =
     let updateScreen (state: CpuState) (VIndex vx) (VIndex vy) (Nibble n) =
@@ -111,7 +111,7 @@ module private InstructionImplementations =
 
 open InstructionImplementations
 
-let private applyDelayTicks (cpu: CpuState) (ticks: int) =
+let private applyDelayTicks (ticks: int) (cpu: CpuState) =
     if ticks <= 0 || cpu.Delay = 0uy then
         cpu
     else
@@ -205,12 +205,21 @@ let private execute (prev: CpuState) (instr: Instruction) =
         printfn $"WARN: Unknown instruction: 0x%04X{rawInstr}"
         state
 
-let stepEmulation fetch (cpuState, timingState) =
-    let timingState' = getNextTimingState timingState
-    let cpuState' = applyDelayTicks cpuState timingState.TimerTicks
+let stepEmulation (prevCpuState, prevTimingState) =
+    let timingState = getNextTimingState prevTimingState
 
-    let cpuState'' =
-        Seq.init timingState'.InstructionsForTick id
-        |> Seq.fold (fun s _ -> fetch s.PC |> execute s) cpuState'
+    let executeNextInstruction state =
+        fetch state.Memory state.PC |> decode |> execute state
 
-    cpuState'', timingState'
+    let rec executeInstructionsForStep count state =
+        if count = 0 then
+            state
+        else
+            executeInstructionsForStep (count - 1) (executeNextInstruction state)
+
+    let cpuState =
+        prevCpuState
+        |> applyDelayTicks timingState.TimerTicks
+        |> executeInstructionsForStep timingState.InstructionsForTick
+
+    cpuState, timingState
