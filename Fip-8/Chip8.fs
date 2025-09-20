@@ -1,5 +1,7 @@
 ﻿module Fip8.Chip8
 
+let InstructionConfig = {| ShiftVyToVx = true |}
+
 let romStart = 0x200us // CHIP-8 programs start at 0x200
 let stackSize = 16
 let memorySize = 4096
@@ -17,8 +19,8 @@ type Byte =
     static member (&&&)(Byte l, Byte r) = Byte (l &&& r)
     static member (|||)(Byte l, Byte r) = Byte (l ||| r)
     static member (^^^)(Byte l, Byte r) = Byte (l ^^^ r)
-    static member (<<<)(Byte l, shift) = Byte (l <<< r)
-    static member (>>>)(Byte l, shift) = Byte (l >>> r)
+    static member (<<<)(Byte b, s) = Byte (b <<< s)
+    static member (>>>)(Byte b, s) = Byte (b >>> s)
 
 type VIndex = VIndex of int
 type Nibble = Nibble of uint8

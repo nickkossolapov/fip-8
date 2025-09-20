@@ -1,5 +1,6 @@
 ﻿module Fip8.Cpu
 
+open System.Security.Cryptography
 open Fip8.Chip8
 open Fip8.Instructions
 open Fip8.Timing
@@ -109,6 +110,38 @@ module private InstructionImplementations =
 
         { state with V = newV }
 
+    let shiftRight state (VIndex vx) (VIndex vy) =
+        let newV = Array.copy state.V
+
+        if InstructionConfig.ShiftVyToVx then
+            newV[vx] <- newV[vy]
+
+        newV[0xF] <- newV[vx] &&& Byte 1uy
+        newV[vx] <- newV[vx] >>> 1
+
+        { state with V = newV }
+
+    let shiftLeft state (VIndex vx) (VIndex vy) =
+        let newV = Array.copy state.V
+
+        if InstructionConfig.ShiftVyToVx then
+            newV[vx] <- newV[vy]
+
+        newV[0xF] <- (newV[vx] &&& Byte 0x80uy) >>> 7
+        newV[vx] <- newV[vx] <<< 1
+
+        { state with V = newV }
+
+
+    let randomVx state (VIndex vx) (Byte nn) =
+        let bytes = RandomNumberGenerator.GetBytes 1
+        let r = Byte bytes[0]
+
+        let newV = Array.copy state.V
+        newV[vx] <- newV[vx] &&& r
+
+        { state with V = newV }
+
 open InstructionImplementations
 
 let private applyDelayTicks (ticks: int) (cpu: CpuState) =
@@ -177,17 +210,21 @@ let private execute (prev: CpuState) (instr: Instruction) =
         { state with V = newV }
     | AddVxVy (vx, vy) -> addVxVy state vx vy
     | SubVxVy (vx, vy) -> subVxVy state vx vy
-    | ShiftRight (vIndex, index) -> failwith "todo"
+    | ShiftRight (vx, vy) -> shiftRight state vx vy
     | SubnVxVy (vx, vy) -> subVxVy state vy vx
-    | ShiftLeft (vIndex, index) -> failwith "todo"
+    | ShiftLeft (vx, vy) -> shiftLeft state vx vy
     | SkipNeqVxVy (VIndex x, VIndex y) ->
         if not (state.V[x] = state.V[y]) then
             { state with PC = state.PC + 2us }
         else
             state
     | LoadI address -> { state with I = address }
-    | JumpV0 address -> failwith "todo"
-    | RandomVx (vIndex, b) -> failwith "todo"
+    | JumpV0 (Address a) ->
+        let (Byte v0) = state.V[0]
+
+        { state with
+            PC = Address (a + uint16 v0) }
+    | RandomVx (vx, nn) -> randomVx state vx nn
     | Draw (vx, vy, n) -> updateScreen state vx vy n
     | SkipIfKey vIndex -> failwith "todo"
     | SkipIfNotKey vIndex -> failwith "todo"
