@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fip-8", "Fip-8\Fip-8.fsproj", "{2D3AF84E-1B10-40F9-BD43-57CA9EA82F6C}"
+Project("{F2A71F9B-5D33-465A-A702-920D77279786}") = "Fip-8", "src\Fip-8.fsproj", "{2D3AF84E-1B10-40F9-BD43-57CA9EA82F6C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

@@ -16,7 +16,7 @@ let testRoms =
        "D:/test-files/6-keypad.ch8"
        "D:/test-files/7-beep.ch8" |]
 
-let rom = readRom testRoms[5]
+let rom = readRom testRoms[1]
 let mutable state = createCpuState rom, createTimingState ()
 
 let runProgramLoop () : bool =
@@ -24,8 +24,6 @@ let runProgramLoop () : bool =
 
 while runProgramLoop () do
     state <- stepEmulation state
-
-    printfn $"{Raylib.IsKeyReleased (KeyboardKey.One)}"
 
     Display.draw (fst state).Screen
 
