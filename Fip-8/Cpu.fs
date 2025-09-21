@@ -24,6 +24,7 @@ type CpuState =
 let createCpuState (rom: uint8 array) =
     let memory = Array.zeroCreate memorySize
     Array.blit rom 0 memory (int romStart) rom.Length
+    Array.blit fontData 0 memory (int fontStart) rom.Length
 
     { V = Array.create 16 (Byte 0uy)
       I = Address 0x0us
@@ -332,7 +333,11 @@ let private execute (prev: CpuState) (instr: Instruction) =
     | LoadDelayVx (VIndex v) -> { state with Delay = state.V[v] }
     | LoadSoundVx (VIndex v) -> { state with Sound = state.V[v] }
     | AddI vx -> addI state vx
-    | LoadFontVx vIndex -> failwith "todo"
+    | LoadFontVx (VIndex v) ->
+        let (Byte x) = state.V[v]
+
+        { state with
+            I = Address (fontStart + fontCharSize * (uint16 x)) }
     | StoreBCD vx -> storeBCD state vx
     | StoreVxToMemory vx -> storeVxToMemory state vx
     | LoadVxFromMemory vx -> loadVxFromMemory state vx

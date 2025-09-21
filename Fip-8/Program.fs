@@ -1,8 +1,6 @@
 ﻿open Fip8
-open Fip8.Chip8
 open Fip8.Cpu
 open Fip8.Instructions
-open Fip8.Keypad
 open Fip8.Timing
 open Raylib_cs
 
@@ -16,12 +14,6 @@ let runProgramLoop () : bool =
 
 while runProgramLoop () do
     state <- stepEmulation state
-
-    Debug.print $"is 1 down: {isKeyDown (Byte 0x1uy)}"
-    
-    match lastKeyPressed () with
-    | Some key -> printfn $"last key: {key}"
-    | None -> ()
 
     Display.draw (fst state).Screen
 
