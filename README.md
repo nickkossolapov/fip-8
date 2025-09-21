@@ -7,16 +7,16 @@ I just need to connect the sound timer to an audio output.
 
 ## Features
 
-- Full CHIP-8 instruction set support.
-- Accurate timing and keypad emulation.
-- Functional-first programming where possible, with minimal state mutation.
-- [Raylib-cs](https://github.com/ChrisDill/Raylib-cs) for display and input handling.
+- Full CHIP-8 instruction set support
+- Accurate timing and keypad emulation
+- Functional-first programming, with minimal state mutation
+- [Raylib-cs](https://github.com/ChrisDill/Raylib-cs) for display and input handling
 - Passes Timendus's [chip-8-test-suite](https://github.com/Timendus/chip8-test-suite/)
 
 ## Usage
 
-1. Set the ROM path in [Program.fs](./src/Program.fs).
-2. Run from IDE or following CLI commands:
+1. Set the ROM path in [Program.fs](./src/Program.fs)
+2. Run from IDE or with the following CLI commands:
     ```sh
     dotnet build
     cd ./src
@@ -32,7 +32,7 @@ I just need to connect the sound timer to an audio output.
 
 ## Screenshots
 
-IBM Logo ROM:
+IBM Logo running:
 
 ![IBM Logo](./images/ibm.jpg)
 
