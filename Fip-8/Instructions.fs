@@ -4,7 +4,7 @@ open System.IO
 open Fip8.Chip8
 
 
-let private getAddress (byte: uint16) = (byte &&& 0x0FFFus) |> Address
+let private getAddress (address: uint16) = (address &&& 0x0FFFus) |> Address
 
 let private getVx (byte: uint16) =
     byte &&& 0x0F00us >>> 8 |> int |> VIndex
@@ -17,41 +17,76 @@ let private getNibble (byte: uint16) = byte &&& 0x000Fus |> uint8 |> Nibble
 let private getByte (byte: uint16) = byte &&& 0x00FFus |> uint8 |> Byte
 
 type Instruction =
-    | ClearScreen // 0x00E0
-    | Return // 0x00EE
-    | Jump of Address // 0x1nnn
-    | Call of Address // 0x2nnn
-    | SkipEq of VIndex * Byte // 0x3xkk
-    | SkipNeq of VIndex * Byte // 0x4xkk
-    | SkipEqVxVy of VIndex * VIndex // 0x5xy0
-    | LoadVx of VIndex * Byte // 0x6xkk
-    | AddVx of VIndex * Byte // 0x7xkk
-    | LoadVxVy of VIndex * VIndex // 0x8xy0
-    | OrVxVy of VIndex * VIndex // 0x8xy1
-    | AndVxVy of VIndex * VIndex // 0x8xy2
-    | XorVxVy of VIndex * VIndex // 0x8xy3
-    | AddVxVy of VIndex * VIndex // 0x8xy4
-    | SubVxVy of VIndex * VIndex // 0x8xy5
-    | ShiftRight of VIndex * VIndex // 0x8xy6
-    | SubnVxVy of VIndex * VIndex // 0x8xy7
-    | ShiftLeft of VIndex * VIndex // 0x8xyE
-    | SkipNeqVxVy of VIndex * VIndex // 0x9xy0
-    | LoadI of Address // 0xAnnn
-    | JumpV0 of Address // 0xB - Note: not implementing 0xBxnn, otherwise would be JumpOffset of Address | VIndex * Byte to handle SUPER-CHIP
-    | RandomVx of VIndex * Byte // 0xCxkk
-    | Draw of VIndex * VIndex * Nibble // 0xDxyn
-    | SkipIfKey of VIndex // 0xEx9E
-    | SkipIfNotKey of VIndex // 0xExA1
-    | LoadVxDelay of VIndex // 0xFx07
-    | WaitKey of VIndex // 0xFx0A
-    | LoadDelayVx of VIndex // 0xFx15
-    | LoadSoundVx of VIndex // 0xFx18
-    | AddI of VIndex // 0xFx1E
-    | LoadFontVx of VIndex // 0xFx29
-    | StoreBCD of VIndex // 0xFx33
-    | StoreVxToMemory of VIndex // 0xFx55
-    | LoadVxFromMemory of VIndex // 0xFx65
-    | Ignored // Includes: Sys 0x0nnn
+    // 0x00E0
+    | ClearScreen
+    // 0x00EE
+    | Return
+    // 0x1nnn
+    | Jump of Address
+    // 0x2nnn
+    | Call of Address
+    // 0x3xkk
+    | SkipEq of VIndex * Byte
+    // 0x4xkk
+    | SkipNeq of VIndex * Byte
+    // 0x5xy0
+    | SkipEqVxVy of VIndex * VIndex
+    // 0x6xkk
+    | LoadVx of VIndex * Byte
+    // 0x7xkk
+    | AddVx of VIndex * Byte
+    // 0x8xy0
+    | LoadVxVy of VIndex * VIndex
+    // 0x8xy1
+    | OrVxVy of VIndex * VIndex
+    // 0x8xy2
+    | AndVxVy of VIndex * VIndex
+    // 0x8xy3
+    | XorVxVy of VIndex * VIndex
+    // 0x8xy4
+    | AddVxVy of VIndex * VIndex
+    // 0x8xy5
+    | SubVxVy of VIndex * VIndex
+    // 0x8xy6
+    | ShiftRight of VIndex * VIndex
+    // 0x8xy7
+    | SubnVxVy of VIndex * VIndex
+    // 0x8xyE
+    | ShiftLeft of VIndex * VIndex
+    // 0x9xy0
+    | SkipNeqVxVy of VIndex * VIndex
+    // 0xAnnn
+    | LoadI of Address
+    // 0xB - Note: not implementing 0xBxnn, otherwise would be JumpOffset of Address | VIndex * Byte to handle SUPER-CHIP
+    | JumpV0 of Address
+    // 0xCxkk
+    | RandomVx of VIndex * Byte
+    // 0xDxyn
+    | Draw of VIndex * VIndex * Nibble
+    // 0xEx9E
+    | SkipIfKey of VIndex
+    // 0xExA1
+    | SkipIfNotKey of VIndex
+    // 0xFx07
+    | LoadVxDelay of VIndex
+    // 0xFx0A
+    | WaitKey of VIndex
+    // 0xFx15
+    | LoadDelayVx of VIndex
+    // 0xFx18
+    | LoadSoundVx of VIndex
+    // 0xFx1E
+    | AddI of VIndex
+    // 0xFx29
+    | LoadFontVx of VIndex
+    // 0xFx33
+    | StoreBCD of VIndex
+    // 0xFx55
+    | StoreVxToMemory of VIndex
+    // 0xFx65
+    | LoadVxFromMemory of VIndex
+    // Includes: Sys 0x0nnn
+    | Ignored
     | Unknown of uint16
 
 let readRom path = File.ReadAllBytes path

@@ -6,7 +6,17 @@ open Raylib_cs
 
 Display.init ()
 
-let rom = readRom "D:/test-files/IBM Logo.ch8"
+// Test suite from https://github.com/Timendus/chip8-test-suite
+let testRoms =
+    [| "D:/test-files/1-chip8-logo.ch8"
+       "D:/test-files/2-ibm-logo.ch8"
+       "D:/test-files/3-corax+.ch8"
+       "D:/test-files/4-flags.ch8"
+       "D:/test-files/5-quirks.ch8"
+       "D:/test-files/6-keypad.ch8"
+       "D:/test-files/7-beep.ch8" |]
+
+let rom = readRom testRoms[3]
 let mutable state = createCpuState rom, createTimingState ()
 
 let runProgramLoop () : bool =

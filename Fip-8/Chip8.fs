@@ -1,11 +1,11 @@
 ﻿module Fip8.Chip8
 
 let InstructionConfig =
-    {| ShiftVyToVx = true
-       StoreModifyI = false |}
+    {| ShiftVyToVx = false // 0x8XY6 and 0x8XYE: load VY to VX
+       StoreModifyI = false |} // 0xFX55 and 0xFX65: increment I register by VX
 
 let romStart = 0x200us // CHIP-8 programs start at 0x200
-let fontStart = 0x020us // Convention for font location in memory
+let fontStart = 0x050us // Convention for font location in memory
 let fontCharSize = 5us
 let stackSize = 16
 let memorySize = 4096

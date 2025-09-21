@@ -24,7 +24,7 @@ type CpuState =
 let createCpuState (rom: uint8 array) =
     let memory = Array.zeroCreate memorySize
     Array.blit rom 0 memory (int romStart) rom.Length
-    Array.blit fontData 0 memory (int fontStart) rom.Length
+    Array.blit fontData 0 memory (int fontStart) fontData.Length
 
     { V = Array.create 16 (Byte 0uy)
       I = Address 0x0us
@@ -77,11 +77,12 @@ module private InstructionImplementations =
             failwith $"Stack overflow with {address}"
 
         let newStack = Array.copy state.Stack
-        newStack[state.SP] <- address
+        newStack[state.SP] <- state.PC
 
         { state with
             Stack = newStack
-            SP = state.SP + 1 }
+            SP = state.SP + 1
+            PC = address }
 
     let stackPop state =
         if state.SP = 0 then
@@ -107,10 +108,22 @@ module private InstructionImplementations =
         let Byte x, Byte y = state.V[vx], state.V[vy]
 
         let noBorrow = if x >= y then 1uy else 0uy
-        let diff = int x - int y
+        let diff = x - y
 
         let newV = Array.copy state.V
-        newV[vx] <- Byte (byte (diff &&& 0xFF))
+        newV[vx] <- Byte (uint8 (diff &&& 0xFFuy))
+        newV[0xF] <- Byte noBorrow
+
+        { state with V = newV }
+
+    let subnVxVy state (VIndex vx) (VIndex vy) =
+        let Byte x, Byte y = state.V[vx], state.V[vy]
+
+        let noBorrow = if y >= x then 1uy else 0uy
+        let diff = y - x
+
+        let newV = Array.copy state.V
+        newV[vx] <- Byte (uint8 (diff &&& 0xFFuy))
         newV[0xF] <- Byte noBorrow
 
         { state with V = newV }
@@ -118,25 +131,30 @@ module private InstructionImplementations =
     let shiftRight state (VIndex vx) (VIndex vy) =
         let newV = Array.copy state.V
 
-        if InstructionConfig.ShiftVyToVx then
-            newV[vx] <- newV[vy]
+        let newVx =
+            if InstructionConfig.ShiftVyToVx then
+                state.V[vx]
+            else
+                state.V[vy]
 
-        newV[0xF] <- newV[vx] &&& Byte 1uy
-        newV[vx] <- newV[vx] >>> 1
+        newV[vx] <- newVx >>> 1
+        newV[0xF] <- newVx &&& Byte 1uy
 
         { state with V = newV }
 
     let shiftLeft state (VIndex vx) (VIndex vy) =
         let newV = Array.copy state.V
 
-        if InstructionConfig.ShiftVyToVx then
-            newV[vx] <- newV[vy]
-
-        newV[0xF] <- (newV[vx] &&& Byte 0x80uy) >>> 7
-        newV[vx] <- newV[vx] <<< 1
+        let newVx =
+            if InstructionConfig.ShiftVyToVx then
+                state.V[vx]
+            else
+                state.V[vy]
+        
+        newV[vx] <- (newVx <<< 1) &&& Byte 0xFFuy
+        newV[0xF] <- (newVx &&& Byte 0x80uy) >>> 7
 
         { state with V = newV }
-
 
     let randomVx state (VIndex vx) (Byte nn) =
         let bytes = RandomNumberGenerator.GetBytes 1
@@ -299,7 +317,7 @@ let private execute (prev: CpuState) (instr: Instruction) =
     | AddVxVy (vx, vy) -> addVxVy state vx vy
     | SubVxVy (vx, vy) -> subVxVy state vx vy
     | ShiftRight (vx, vy) -> shiftRight state vx vy
-    | SubnVxVy (vx, vy) -> subVxVy state vy vx
+    | SubnVxVy (vx, vy) -> subnVxVy state vx vy
     | ShiftLeft (vx, vy) -> shiftLeft state vx vy
     | SkipNeqVxVy (VIndex x, VIndex y) ->
         if not (state.V[x] = state.V[y]) then
