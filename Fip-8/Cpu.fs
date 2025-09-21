@@ -150,7 +150,7 @@ module private InstructionImplementations =
                 state.V[vx]
             else
                 state.V[vy]
-        
+
         newV[vx] <- (newVx <<< 1) &&& Byte 0xFFuy
         newV[0xF] <- (newVx &&& Byte 0x80uy) >>> 7
 
@@ -166,10 +166,12 @@ module private InstructionImplementations =
         { state with V = newV }
 
     let waitKey state (VIndex v) =
-        match lastKeyPressed () with
-        | Some byte ->
+        let lastKey = seq { for i in 0uy .. 0xFuy -> i } |> Seq.tryFind hasBeenReleased
+
+        match lastKey with
+        | Some b ->
             let newV = Array.copy state.V
-            newV[v] <- byte
+            newV[v] <- Byte b
 
             { state with V = newV }
         | None -> { state with PC = state.PC - 2us }
@@ -332,13 +334,17 @@ let private execute (prev: CpuState) (instr: Instruction) =
             PC = Address (a + uint16 v0) }
     | RandomVx (vx, nn) -> randomVx state vx nn
     | Draw (vx, vy, n) -> updateScreen state vx vy n
-    | SkipIfKey (VIndex v) ->
-        if isKeyDown v then
+    | SkipIfKey (VIndex vx) ->
+        let (Byte key) = state.V[vx]
+
+        if isKeyDown (int key) then
             { state with PC = state.PC + 2us }
         else
             state
-    | SkipIfNotKey (VIndex x) ->
-        if not (isKeyDown x) then
+    | SkipIfNotKey (VIndex vx) ->
+        let (Byte key) = state.V[vx]
+
+        if not (isKeyDown (int key)) then
             { state with PC = state.PC + 2us }
         else
             state

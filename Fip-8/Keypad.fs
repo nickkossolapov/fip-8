@@ -1,6 +1,5 @@
 ﻿module Fip8.Keypad
 
-open Fip8.Chip8
 open Raylib_cs
 
 (* 
@@ -50,7 +49,10 @@ let isKeyDown value : bool =
     |> Option.map checkKey
     |> Option.defaultValue false
 
-let lastKeyPressed () : Byte option =
-    let key = enum<KeyboardKey> (Raylib.GetKeyPressed ())
+let hasBeenReleased (value: uint8) : bool =
+    let checkKey key : bool =
+        key |> Raylib.IsKeyReleased |> CBool.op_Implicit
 
-    Map.tryFind key keycodeToValue |> Option.map (fun b -> Byte (uint8 b))
+    Map.tryFind (int value) valueToKeycode
+    |> Option.map checkKey
+    |> Option.defaultValue false
